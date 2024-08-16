@@ -4,26 +4,46 @@
 name: Build and Push Template
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
+  workflow_call:
+    inputs:
+      IMAGE_NAME:
+        required: false
+        type: string
+        default: ${{ github.event.repository.name }}
+      IMAGE_TAG:
+        required: false
+        type: string
+        default: "latest"
+      DOCKERFILE:
+        required: false
+        type: string
+        default: "Dockerfile"
+      DOCKERFILE_CONTEXT:
+        required: false
+        type: string
+        default: "."
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+    
 
-env:
-  IMAGE_NAME: docker.io/joaotiagoalmeid4/github-base-templates
-  IMAGE_TAG: latest
+permissions:
+  contents: read
 
 jobs:
   build:
     name: Build and Push
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    env:
+      DOCKERHUB_IMAGE_NAME: "docker.io/joaotiagoalmeid4/${{ inputs.IMAGE_NAME }}"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Build the Image
         run: |
-          IMAGE_NAME=$IMAGE_NAME IMAGE_TAG=$IMAGE_TAG make build
+          ./scripts/build.sh ${{ inputs.DOCKERFILE }} ${{ inputs.DOCKERFILE_CONTEXT }} ${{ env.DOCKERHUB_IMAGE_NAME }} ${{ inputs.IMAGE_TAG }}
 
       - name: Login in DockerHub
         run: |
@@ -31,6 +51,6 @@ jobs:
   
       - name: Push the Image
         run: |
-          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push ${{ env.DOCKERHUB_IMAGE_NAME }}:${{ inputs.IMAGE_TAG }}
 
 

@@ -1,0 +1,55 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Tag and Push Template
+
+on:
+  workflow_call:
+    inputs:
+      OLD_IMAGE_NAME:
+        required: false
+        type: string
+        default:  "${{ github.event.repository.name }}:latest"
+      NEW_IMAGE_NAME:
+        required: false
+        type: string
+        default: "${{ github.event.repository.name }}:latest"
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    name: Tag the Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    env:
+      DOCKERHUB_IMAGE_OLD: "docker.io/joaotiagoalmeid4/${{ inputs.OLD_IMAGE_NAME }}"
+      DOCKERHUB_IMAGE_NEW: "docker.io/joaotiagoalmeid4/${{ inputs.NEW_IMAGE_NAME }}"
+      # DOCKERHUB_IMAGE_LATEST: "docker.io/joaotiagoalmeid4/${{ inputs.NEW_IMAGE_NAME%%:* }}:latest"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login in DockerHub
+        run: |
+          docker login --username  ${{ vars.DOCKERHUB_USERNAME }} --password ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: Pull the Image
+        run: |
+          docker pull ${{ env.DOCKERHUB_IMAGE_OLD }}
+
+      - name: Tag the Image
+        run: |
+          docker tag ${{ env.DOCKERHUB_IMAGE_OLD }} ${{ env.DOCKERHUB_IMAGE_NEW }}
+          # docker tag ${{ env.DOCKERHUB_IMAGE_OLD }} ${{ env.DOCKERHUB_IMAGE_LATEST }}
+
+      - name: Push the Image
+        run: |
+          docker push ${{ env.DOCKERHUB_IMAGE_NEW }}
+          # docker push ${{ env.DOCKERHUB_IMAGE_LATEST }}
+
+

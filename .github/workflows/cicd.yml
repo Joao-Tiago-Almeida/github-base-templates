@@ -1,0 +1,30 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: CI Base Template
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  IMAGE_NAME: docker.io/joaotiagoalmeid4/github-base-templates
+  IMAGE_TAG: latest
+  DOCKERFILE: Dockerfile
+  DOCKERFILE_CONTEXT: .
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  tag:
+    needs: build
+    uses: ./.github/workflows/tag.yml
+    with:
+      NEW_IMAGE_NAME: ${{ github.event.repository.name }}:rc-${{ github.sha }}
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
