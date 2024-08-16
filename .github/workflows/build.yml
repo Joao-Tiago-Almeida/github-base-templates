@@ -1,0 +1,36 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Build and Push Template
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  IMAGE_NAME: docker.io/joaotiagoalmeid4/github-base-templates
+  IMAGE_TAG: latest
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the Image
+        run: |
+          IMAGE_NAME=$IMAGE_NAME IMAGE_TAG=$IMAGE_TAG make build
+
+      - name: Login in DockerHub
+        run: |
+          docker login --username  ${{ vars.DOCKERHUB_USERNAME }} --password ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: Push the Image
+        run: |
+          docker push $IMAGE_NAME:$IMAGE_TAG
+
+
