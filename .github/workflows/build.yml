@@ -36,14 +36,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     env:
-      DOCKERHUB_IMAGE_NAME: "docker.io/joaotiagoalmeid4/${{ inputs.IMAGE_NAME }}"
+      DOCKERHUB_IMAGE_NAME: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.IMAGE_NAME }}"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Build the Image
-        run: |
-          ./scripts/build.sh ${{ inputs.DOCKERFILE }} ${{ inputs.DOCKERFILE_CONTEXT }} ${{ env.DOCKERHUB_IMAGE_NAME }} ${{ inputs.IMAGE_TAG }}
+        run: | 
+          docker build \
+            --build-arg=${{ env.DOCKERHUB_IMAGE_NAME }} \
+              -t ${{ env.DOCKERHUB_IMAGE_NAME }}:${{ inputs.IMAGE_TAG }} \
+              -f ${{ inputs.DOCKERFILE }} ${{ inputs.DOCKERFILE_CONTEXT }}
 
       - name: Login in DockerHub
         run: |
