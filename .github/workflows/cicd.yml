@@ -11,14 +11,10 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    secrets:
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    secrets: inherit
 
   tag:
     needs: build
     uses: ./.github/workflows/tag.yml
-    with:
-      NEW_IMAGE_NAME: ${{ github.event.repository.name }}:rc-${{ github.sha }}
-    secrets:
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    secrets: inherit
 

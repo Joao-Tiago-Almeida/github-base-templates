@@ -9,11 +9,19 @@ on:
       OLD_IMAGE_NAME:
         required: false
         type: string
-        default:  "${{ github.event.repository.name }}:latest"
+        default:  ${{ github.event.repository.name }}
+      OLD_IMAGE_TAG:
+        required: false
+        type: string
+        default: "build-${{ github.sha }}"
       NEW_IMAGE_NAME:
         required: false
         type: string
-        default: "${{ github.event.repository.name }}:latest"
+        default:  ${{ github.event.repository.name }}
+      NEW_IMAGE_TAG:
+        required: false
+        type: string
+        default: "rc-${{ github.sha }}"
     secrets:
       DOCKERHUB_TOKEN:
         required: true
@@ -27,9 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     env:
-      DOCKERHUB_IMAGE_OLD: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.OLD_IMAGE_NAME }}"
-      DOCKERHUB_IMAGE_NEW: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.NEW_IMAGE_NAME }}"
-      # DOCKERHUB_IMAGE_LATEST: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.NEW_IMAGE_NAME%%:* }}:latest"
+      DOCKERHUB_IMAGE_OLD: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.OLD_IMAGE_NAME }}:${{ inputs.OLD_IMAGE_TAG }}"
+      DOCKERHUB_IMAGE_NEW: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.NEW_IMAGE_NAME }}:${{ inputs.NEW_IMAGE_TAG }}"
+      DOCKERHUB_IMAGE_LATEST: "docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.NEW_IMAGE_NAME }}:latest"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,14 +50,16 @@ jobs:
         run: |
           docker pull ${{ env.DOCKERHUB_IMAGE_OLD }}
 
-      - name: Tag the Image
+      - name: Tag the Images
         run: |
+          echo "Tagging the image ${{ env.DOCKERHUB_IMAGE_OLD }} as ${{ env.DOCKERHUB_IMAGE_NEW }} and "
           docker tag ${{ env.DOCKERHUB_IMAGE_OLD }} ${{ env.DOCKERHUB_IMAGE_NEW }}
-          # docker tag ${{ env.DOCKERHUB_IMAGE_OLD }} ${{ env.DOCKERHUB_IMAGE_LATEST }}
+          docker tag ${{ env.DOCKERHUB_IMAGE_OLD }} ${{ env.DOCKERHUB_IMAGE_LATEST }}
+          
 
-      - name: Push the Image
+      - name: Push the Images
         run: |
+          echo "Pushing the image ${{ env.DOCKERHUB_IMAGE_NEW }} and ${{ env.DOCKERHUB_IMAGE_LATEST }}"
           docker push ${{ env.DOCKERHUB_IMAGE_NEW }}
-          # docker push ${{ env.DOCKERHUB_IMAGE_LATEST }}
-
+          docker push ${{ env.DOCKERHUB_IMAGE_LATEST }}
 
